@@ -1,0 +1,158 @@
+<div class="chat-page">
+  <div class="window-wrapper">
+    <div class="window-title">
+      <div class="title">
+        <span>Chat App</span>
+      </div>
+      <div class="close">
+        <a href="/login">
+          <i class="fa fa-times"></i>
+        </a>
+      </div>
+    </div>
+    <div class="window-area">
+      <div class="conversation-list">
+        <ul class="search-holder">
+          <li class="item">
+            <div class="a" onclick="ToggleSearchBar()">
+              <i class="fa fa-list-alt"></i>
+              <span>Ara</span>
+            </div>
+            <div class="SearchHolder dn">
+              <div>
+                <input type="text" class="input" autocomplete="off" name="searchtext" placeholder="Kullanıcı Adı veya E-posta Adresi yazınız">
+                <button class="btn" id="btnSearch">Ara</button>
+              </div>
+              <ul id='search-result'>
+                <li class="friend" id="find-user-schema" data-id="">
+                  <div class="a">
+                    <i class="fa fa-user"></i>
+                    <span class="fullname"></span>
+                    </br>
+                    <span class="username"></span>
+                    <i class="fa fa-user-plus hover addfriend absolute"></i>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+        <ul>
+          <li class="item">
+            <ul id='friend-request'>
+              <li class="friend" id="requested-user-schema" data-id="">
+                <div class="a">
+                  <i class="fa fa-user"></i>
+                  <span class="fullname"></span>
+                  </br>
+                  <span class="username"></span>
+                  <i class="fa fa-check hover acceptfriend absolute"></i>
+                </div>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="friend-holder">
+          <li class="friend">
+            <div class="a">
+              <i class="fa fa-user"></i>
+              </i>
+              <span>Deniz Doğan</span>
+              <i class="fa fa-times absolute"></i>
+            </div>
+          </li>
+        </ul>
+        <div class="my-account">
+          <div class="image">
+            <img src="/images/icon_user.png">
+          </div>
+          <div class="name">
+            <span>{{user.fullname}}</span>
+            <i class="fa fa-angle-down"></i>
+            <span class="availability">Müsait</span>
+          </div>
+
+        </div>
+      </div>
+      <div class="chat-area">
+        <div class="title">
+          <h2>Team chat</h2>
+        </div>
+        <div class="chat-list" style="overflow-y:scroll">
+          <ul class="messages">
+
+          </ul>
+        </div>
+        <div class="input-area">
+          <div class="input-wrapper">
+            <input type="text" id="m" class="inputMessage" value="" autocomplete="off">
+          </div>
+          <button class="send-btn">Gönder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function ToggleSearchBar() {
+    if ($(".SearchHolder").hasClass("dn"))
+      $(".SearchHolder").removeClass("dn");
+    else
+      $(".SearchHolder").addClass("dn");
+  }
+
+  $('#btnSearch').click(function () {
+    var data = {}
+    data.searchtext = $("input[name='searchtext']").val();
+    $.post('/users/search', { param: data }, function (resp) {
+      resp.forEach(function (item) {
+        var userSchema = $("#find-user-schema").clone();
+        $(userSchema).removeAttr("id");
+        $(userSchema).attr("data-id", item._id);
+        $(userSchema).find(".fullname").html(item.fullname);
+        $(userSchema).find(".username").html("@" + item.username);
+        $(userSchema).find(".addfriend").attr("onclick", "AddFriend($(this))");
+        $("#search-result").append(userSchema);
+      });
+    });
+  });
+
+
+  function GetFriendsRequest() {
+    $.post('/users/getfriendrequest', function (resp) {
+      console.log(resp);
+      resp.forEach(function (item) {
+        var userSchema = $("#requested-user-schema").clone();
+        $(userSchema).removeAttr("id");
+        $(userSchema).attr("data-id", item._id);
+        $(userSchema).find(".fullname").html(item.fullname);
+        $(userSchema).find(".username").html("@" + item.username);
+        $(userSchema).find(".acceptfriend").attr("onclick", "AcceptFriend($(this))");
+        $("#friend-request").append(userSchema);
+      });
+    });
+
+  }
+
+  function AddFriend(item) {
+    var data = {}
+    data.userid = "";
+    data.friendid = $(item).parents('.friend').attr("data-id");
+    data.allowed = false;
+    $.post('/users/addfriend', data, function (resp) {
+      console.log(resp);
+    });
+
+  }
+
+  function AcceptFriend(item) {
+    var data = {}
+    data.id = $(item).parents('.friend').attr("data-id");
+    console.log(data);
+    $.post('/users/acceptfriend', data, function (resp) {
+      console.log(resp);
+    });
+  }
+
+  GetFriendsRequest();
+</script>
